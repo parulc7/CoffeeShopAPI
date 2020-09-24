@@ -27,9 +27,17 @@ func main() {
 		ReadTimeout:  1 * time.Second,
 		WriteTimeout: 1 * time.Second,
 	}
+
+	// Listen and serve concurrently while waiting for an interrupt
+	go func() {
+		err := s.ListenAndServe()
+		if err != nil {
+			l.Fatal(err)
+		}
+	}()
+
 	// Map the routes in servemux and start server
 	sm.Handle("/", productsHandler)
-	s.ListenAndServe()
 
 	// Graceful Shutdown
 	sigChan := make(chan os.Signal)

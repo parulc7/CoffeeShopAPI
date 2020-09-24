@@ -19,6 +19,16 @@ func NewProducts(l *log.Logger) *Product {
 
 // Server HTTP Method of the Handler Interface
 func (p *Product) ServeHTTP(w http.ResponseWriter, r *http.Request) {
+	// If we get a GET Request, return the products
+	if r.Method == http.MethodGet {
+		p.GetProducts(w, r)
+		return
+	}
+	// Catch all
+	w.WriteHeader(http.StatusMethodNotAllowed)
+}
+
+func (p *Product) GetProducts(w http.ResponseWriter, r *http.Request) {
 	// prod := []Product{}
 	// err := json.NewDecoder(r.Body).Decode(&prod)
 	// if err != nil {

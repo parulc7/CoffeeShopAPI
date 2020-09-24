@@ -22,13 +22,13 @@ type Product struct {
 type Products []*Product
 
 // Define a method to return in JSON Encoding
-func (p Products) ToJSON(w io.Writer) error {
+func (p *Products) ToJSON(w io.Writer) error {
 	e := json.NewEncoder(w)
 	return e.Encode(p)
 }
 
 func GetProducts() Products {
-	return Products(productList)
+	return productList
 }
 
 // Products Slice
