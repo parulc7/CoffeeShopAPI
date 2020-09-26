@@ -2,6 +2,7 @@ package data
 
 import (
 	"encoding/json"
+	"fmt"
 	"io"
 	"time"
 )
@@ -18,7 +19,7 @@ type Product struct {
 	DeletedOn   string  `json:"-"`
 }
 
-var ErrorProductNotFound = fmt.Error("Product Not Found!!")
+var ErrorProductNotFound = fmt.Errorf("Product Not Found!!")
 
 // create a slice of Product struct Just for ease
 type Products []*Product

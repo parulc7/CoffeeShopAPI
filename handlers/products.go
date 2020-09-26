@@ -4,6 +4,7 @@ import (
 	"log"
 	"net/http"
 	"regexp"
+	"strconv"
 
 	"github.com/parulc7/CoffeeShopAPI/data"
 )
@@ -30,11 +31,38 @@ func (p *Product) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	if r.Method == http.MethodPut {
-		// TODO: GET ID AND HANDLE THE PUT REQUEST
-
 		// Use Regular Expression to extract the ID
-		r := regexp.MustCompile(`/(0-9)+`)
-		d := r.FindAllStringSubmatch(r.URL.Path)
+		rg := regexp.MustCompile(`[0-9]+`)
+		d := rg.FindAllStringSubmatch(r.URL.Path, -1)
+		// p.l.Println(d)
+
+		// Case : Multiple IDs Match
+		if len(d) != 1 {
+			p.l.Println("Invalid URI - multiple IDs")
+			http.Error(w, "No Match Found!!", http.StatusBadRequest)
+			return
+		}
+		// Case : Multiple Captured in Single Group
+		if len(d[0]) < 1 {
+			p.l.Println("Invalid URI - more than one capture group")
+			http.Error(w, "No Match Found!!", http.StatusBadRequest)
+			return
+		}
+
+		// Extract the first match of first group
+		idString := d[0][0]
+		// Convert to Integer
+		id, err := strconv.Atoi(idString)
+		if err != nil {
+			p.l.Println("Invalid URI - ", err)
+			http.Error(w, "Invalid URI", http.StatusBadRequest)
+			return
+		}
+		// p.l.Println("ID Received", id)
+
+		// Run update product method on the product
+		p.UpdateProduct(id, w, r)
+		return
 	}
 	// Catch all
 	w.WriteHeader(http.StatusMethodNotAllowed)
