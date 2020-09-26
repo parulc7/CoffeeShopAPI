@@ -3,6 +3,7 @@ package handlers
 import (
 	"log"
 	"net/http"
+	"regexp"
 
 	"github.com/parulc7/CoffeeShopAPI/data"
 )
@@ -24,10 +25,22 @@ func (p *Product) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		p.GetProducts(w, r)
 		return
 	}
+	if r.Method == http.MethodPost {
+		p.AddProduct(w, r)
+		return
+	}
+	if r.Method == http.MethodPut {
+		// TODO: GET ID AND HANDLE THE PUT REQUEST
+
+		// Use Regular Expression to extract the ID
+		r := regexp.MustCompile(`/(0-9)+`)
+		d := r.FindAllStringSubmatch(r.URL.Path)
+	}
 	// Catch all
 	w.WriteHeader(http.StatusMethodNotAllowed)
 }
 
+// GET Request Handler Function
 func (p *Product) GetProducts(w http.ResponseWriter, r *http.Request) {
 	// prod := []Product{}
 	// err := json.NewDecoder(r.Body).Decode(&prod)
@@ -54,6 +67,45 @@ func (p *Product) GetProducts(w http.ResponseWriter, r *http.Request) {
 	// Error Handling
 	if err != nil {
 		http.Error(w, "Error while getting data!!", http.StatusInternalServerError)
+		return
+	}
+}
+
+// POST Request Handler Function
+func (p *Product) AddProduct(w http.ResponseWriter, r *http.Request) {
+	p.l.Println("POST Request Received for Products Model!!")
+	prod := &data.Product{}
+	err := prod.ToModel(r.Body)
+	if err != nil {
+		http.Error(w, "Error while posting data!!", http.StatusBadRequest)
+		// p.l.Println(err)
+	}
+	// p.l.Println(prod)
+	data.AddProduct(prod)
+}
+
+// PUT Request Handler Function
+func (p *Product) UpdateProduct(id int, w http.ResponseWriter, r *http.Request) {
+	p.l.Println("PUT Request Received for Products Model!!")
+	prod := &data.Product{}
+	err := prod.ToModel(r.Body)
+	if err != nil {
+		http.Error(w, "Error while posting data!!", http.StatusBadRequest)
+		// p.l.Println(err)
+	}
+	// p.l.Println(prod)
+
+	// Call Update method
+	err = data.UpdateProduct(id, prod)
+
+	// If Product not found in DB
+	if err == data.ErrorProductNotFound {
+		http.Error(w, "Product not found", http.StatusNotFound)
+		return
+	}
+	// If any other error
+	if err != nil {
+		http.Error(w, "Error while Updating Product", http.StatusInternalServerError)
 		return
 	}
 }

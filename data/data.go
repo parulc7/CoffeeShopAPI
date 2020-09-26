@@ -18,20 +18,65 @@ type Product struct {
 	DeletedOn   string  `json:"-"`
 }
 
+var ErrorProductNotFound = fmt.Error("Product Not Found!!")
+
 // create a slice of Product struct Just for ease
 type Products []*Product
 
-// Define a method to return in JSON Encoding
+// Define a method to return in JSON Encoding - GET
 func (p *Products) ToJSON(w io.Writer) error {
 	e := json.NewEncoder(w)
 	return e.Encode(p)
 }
 
+// Define a method to convert JSON data to our model - POST/PUT
+func (p *Product) ToModel(r io.Reader) error {
+	e := json.NewDecoder(r)
+	return e.Decode(p)
+}
+
+// Get the list of products
 func GetProducts() Products {
 	return productList
 }
 
-// Products Slice
+// Add to the list of Products
+func AddProduct(p *Product) {
+	// Generat ID for the product
+	p.ID = generateID()
+	// Add to the data
+	productList = append(productList, p)
+}
+
+// Helper function to generate ID
+func generateID() int {
+	id := productList[len(productList)-1].ID
+	return id + 1
+}
+
+func UpdateProduct(id int, p *Product) error {
+	// Find Product
+	i, err := findProduct(id)
+	if err != nil {
+		return err
+	}
+	// Update the product
+	p.ID = id
+	productList[i] = p
+	return nil
+}
+
+// Helper Function to find the product to be updated
+func findProduct(id int) (int, error) {
+	for i, p := range productList {
+		if p.ID == id {
+			return i, nil
+		}
+	}
+	return -1, ErrorProductNotFound
+}
+
+// Products Slice i.e. the Data
 var productList = []*Product{
 	&Product{
 		ID:          1,
