@@ -23,7 +23,6 @@ func main() {
 	// Refactoring to handle each HTTP verb using different subrouters
 	getRouter := sm.Methods(http.MethodGet).Subrouter()
 	getRouter.HandleFunc("/", productsHandler.GetProducts)
-	getRouter.Use(productsHandler.MiddlewareProductValidation)
 
 	postRouter := sm.Methods(http.MethodPost).Subrouter()
 	postRouter.HandleFunc("/", productsHandler.AddProduct)

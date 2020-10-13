@@ -2,6 +2,7 @@ package handlers
 
 import (
 	"context"
+	"fmt"
 	"log"
 	"net/http"
 	"strconv"
@@ -139,9 +140,10 @@ func (p Product) UpdateProduct(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-// Middleware function
+// Structure to store context
 type KeyProduct struct{}
 
+// Middleware function
 func (p Product) MiddlewareProductValidation(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		prod := &data.Product{}
@@ -150,7 +152,16 @@ func (p Product) MiddlewareProductValidation(next http.Handler) http.Handler {
 			http.Error(w, "Error while posting data!!", http.StatusBadRequest)
 			// p.l.Println(err)
 		}
+		p.l.Println(prod)
+		// Validate Products
+		err = prod.Validate()
+		if err != nil {
+			p.l.Printf("Error Validating Product : %v", err)
+			http.Error(w, fmt.Sprintf("Error Validating Product : %s", err), http.StatusBadRequest)
+			return
+		}
 
+		// Add Product to the context
 		ctx := context.WithValue(r.Context(), KeyProduct{}, prod)
 		r = r.WithContext(ctx)
 		next.ServeHTTP(w, r)
