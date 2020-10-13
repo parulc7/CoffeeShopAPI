@@ -8,6 +8,7 @@ import (
 	"os/signal"
 	"time"
 
+	"github.com/gorilla/mux"
 	"github.com/parulc7/CoffeeShopAPI/handlers"
 )
 
@@ -17,7 +18,20 @@ func main() {
 	// Passing the global logger to the handler
 	productsHandler := handlers.NewProducts(l)
 	// Create a custom servemux
-	sm := http.NewServeMux()
+	sm := mux.NewRouter()
+
+	// Refactoring to handle each HTTP verb using different subrouters
+	getRouter := sm.Methods(http.MethodGet).Subrouter()
+	getRouter.HandleFunc("/", productsHandler.GetProducts)
+	getRouter.Use(productsHandler.MiddlewareProductValidation)
+
+	postRouter := sm.Methods(http.MethodPost).Subrouter()
+	postRouter.HandleFunc("/", productsHandler.AddProduct)
+	postRouter.Use(productsHandler.MiddlewareProductValidation)
+
+	putRouter := sm.Methods(http.MethodPut).Subrouter()
+	putRouter.HandleFunc("/{id:[0-9]+}", productsHandler.UpdateProduct)
+	putRouter.Use(productsHandler.MiddlewareProductValidation)
 
 	// Server Config here
 	s := &http.Server{
@@ -35,10 +49,6 @@ func main() {
 			l.Fatal(err)
 		}
 	}()
-
-	// Map the routes in servemux and start server
-	sm.Handle("/", productsHandler)
-
 	// Graceful Shutdown
 	sigChan := make(chan os.Signal)
 	signal.Notify(sigChan, os.Kill)
